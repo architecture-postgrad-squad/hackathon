@@ -1,0 +1,35 @@
+@startuml "Hackathon flow"
+
+actor       User      
+control     API 
+entity      AuthLambda      
+entity      ProcessLambda
+database    Persistence
+database    AWS_S3
+queue       AWS_SQS  
+entity      AWS_SNS
+entity      AWS_CRON
+
+User -> API : logs in
+API -> AuthLambda: requests jwt
+AuthLambda -> API: sends jwt
+User -> API: requests POST /process
+
+API -> AWS_SQS: update queue
+AWS_SQS -> ProcessLambda: takes action
+ProcessLambda -> AWS_S3: writes
+
+loop
+    AWS_CRON -> AWS_S3: verifies process state
+    note over AWS_CRON: if process state is ok, should persist state
+    
+    alt  [ process_state = OK]
+        AWS_CRON -> Persistence: updates process state
+        Persistence -> AWS_CRON: Returns register
+    end
+end
+
+AWS_SNS -> User: sends email 
+
+
+@enduml
