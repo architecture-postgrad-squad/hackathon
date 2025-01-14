@@ -3,33 +3,68 @@
 actor       User      
 control     API 
 entity      AuthLambda      
+note over ProcessLambda: TBD: steps flow to use N coordinate lambdas
 entity      ProcessLambda
-database    Persistence
+entity      Lambda
+database    DynamoDB
 database    AWS_S3
 queue       AWS_SQS  
 entity      AWS_SNS
 entity      AWS_CRON
+entity      AWS_STEPS
 
+activate User
 User -> API : logs in
+activate API
 API -> AuthLambda: requests jwt
+activate AuthLambda
 AuthLambda -> API: sends jwt
+deactivate AuthLambda
 User -> API: requests POST /process
+API -> AWS_SQS: updates queue
+deactivate API
 
-API -> AWS_SQS: update queue
+activate AWS_SQS
 AWS_SQS -> ProcessLambda: takes action
-ProcessLambda -> AWS_S3: writes
+deactivate AWS_SQS
+
+loop 
+note over ProcessLambda: steps function implementation
+activate ProcessLambda
+ProcessLambda -> ProcessLambda: process
+end
+deactivate ProcessLambda
 
 loop
+    note over AWS_CRON: checks [pictures == ammount then process_state = 'OK']
     AWS_CRON -> AWS_S3: verifies process state
-    note over AWS_CRON: if process state is ok, should persist state
+    activate AWS_S3
+    activate AWS_CRON
+    AWS_S3 -> AWS_CRON: returns state
+    deactivate AWS_S3
     
-    alt  [ process_state = OK]
-        AWS_CRON -> Persistence: updates process state
-        Persistence -> AWS_CRON: Returns register
+    AWS_CRON -> AWS_SNS: sends process state
+    activate AWS_SNS
+    alt [ process_state ]
+        AWS_SNS -> Lambda: notifies state change
+        deactivate AWS_SNS
+        activate Lambda
+        Lambda -> DynamoDB: updates process state
+        activate DynamoDB
+        DynamoDB -> Lambda: returns success
+        deactivate Lambda
+        deactivate DynamoDB
+    end
+
+    alt  [ process_state is OK]
+        AWS_CRON -> AWS_SNS: notifies process is done
+        deactivate AWS_CRON
+        activate AWS_SNS
+        AWS_SNS -> User: notifies user 
+        deactivate AWS_SNS
+        deactivate User
     end
 end
-
-AWS_SNS -> User: sends email 
 
 
 @enduml

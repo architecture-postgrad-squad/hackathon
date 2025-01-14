@@ -27,31 +27,18 @@ O código fonte foi desenvolvido em TBD, o banco de dados TBD e os testes unitá
 
 #### Arquitetura
 
-#### Serviços:
+TODO
 
-- **Webhook**: serviço destinado a receber notificações, enviadas pela API do mercado pago, sobre andamento/status do pagamento referente a compra realizada no back-end;
-- **Back-end Base**: serviço destinado ao gerenciamento de cliente e produtos.
-- **Pedidos**: Responsável pela gestão e operacionalização de pedidos (visão do cliente).
-- **Pagamentos**: Responsável pela operacionalização e gestão de cobranças.
-- **Produção**: Responsável pela fila de produção dos pedidos (visão da cozinha).
+![imagem](/doc/architecture/architecture.png)
 
-#### Infraestrutura:
+![imagem](/doc/uml/sequence.png)
 
-Cada serviço dispõe de sua própria infraestrutura, configurada com Terraform e implantada em EKS (Elastic Kubernetes Service), mantendo o padrão de gerenciamento por Kubernetes. Cada microsserviço conta com seu próprio cluster e repositório dedicado.
-Pipeline de CI/CD: Implementado com GitHub Actions, assegurando:
+#### Serviços
 
-- Validação de builds.
-- Qualidade de código com cobertura mínima de 70%.
-- Deploy automatizado em produção para cada serviço no merge para a branch principal.
+- **API:**
+- **LambdaAuth:**
+- **Persistência:**
 
-O processo de autenticação é feito com os serviços cognito e Lambda function da AWS. Ao receber uma requisição de autenticação, o API Gateway irá direcioná-lo para a função serverless da lambda (**auth-func**).
+#### Infraestrutura
 
-A lambda function por sua vez deve solicitar do Cognito um access token criado para os campos de login enviados, no nosso caso será apenas o cpf. O Access token dispõe de um contexto, o qual limita acesso às APIs dispostas na infraestrutura.
-
-### Requisitos
-
-- [Kubernetes](https://kubernetes.io/releases/download/);
-- [Docker](https://docs.docker.com/get-docker/);
-- [Git](https://git-scm.com/downloads);
-- [AWS CLI](https://aws.amazon.com/cli/);
-- [Terraform](https://developer.hashicorp.com/terraform/install).
+TODO
