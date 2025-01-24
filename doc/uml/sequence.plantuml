@@ -1,20 +1,19 @@
-@startuml "Hackathon flow"
+@startuml ""
 
 actor       User      
 control     API 
 entity      AuthLambda      
-note over ProcessLambda: TBD: steps flow to use N coordinate lambdas
-entity      ProcessLambda
-entity      Lambda
+note over   AWS_ProcessLambda: TBD: steps flow to use N coordinate lambdas
+entity      AWS_ProcessLambda
 database    DynamoDB
 database    AWS_S3
 queue       AWS_SQS  
 entity      AWS_SNS
-entity      AWS_CRON
-entity      AWS_STEPS
+entity      AWS_ValidationLambda
+entity      AWS_WriterLambda
 
-activate User
 User -> API : logs in
+activate User
 activate API
 API -> AuthLambda: requests jwt
 activate AuthLambda
@@ -25,46 +24,50 @@ API -> AWS_SQS: updates queue
 deactivate API
 
 activate AWS_SQS
-AWS_SQS -> ProcessLambda: takes action
+AWS_SQS -> AWS_ProcessLambda: takes action
 deactivate AWS_SQS
 
 loop 
-note over ProcessLambda: steps function implementation
-activate ProcessLambda
-ProcessLambda -> ProcessLambda: process
+note over AWS_ProcessLambda: steps function implementation
+activate AWS_ProcessLambda
+AWS_ProcessLambda -> AWS_ProcessLambda: process
 end
-deactivate ProcessLambda
+deactivate AWS_ProcessLambda
 
 loop
-    note over AWS_CRON: checks [pictures == ammount then process_state = 'OK']
-    AWS_CRON -> AWS_S3: verifies process state
+    note over AWS_ValidationLambda: if [bucket content == ammount ]  then process_state = 'OK'
+    AWS_ValidationLambda -> AWS_S3: verifies bucket content
     activate AWS_S3
-    activate AWS_CRON
-    AWS_S3 -> AWS_CRON: returns state
+    activate AWS_ValidationLambda
+    AWS_S3 -> AWS_ValidationLambda: Returns bucket state
     deactivate AWS_S3
-    
-    AWS_CRON -> AWS_SNS: sends process state
-    activate AWS_SNS
-    alt [ process_state ]
-        AWS_SNS -> Lambda: notifies state change
-        deactivate AWS_SNS
-        activate Lambda
-        Lambda -> DynamoDB: updates process state
-        activate DynamoDB
-        DynamoDB -> Lambda: returns success
-        deactivate Lambda
-        deactivate DynamoDB
-    end
 
-    alt  [ process_state is OK]
-        AWS_CRON -> AWS_SNS: notifies process is done
-        deactivate AWS_CRON
-        activate AWS_SNS
-        AWS_SNS -> User: notifies user 
-        deactivate AWS_SNS
-        deactivate User
+    AWS_ValidationLambda -> AWS_SNS: Notifies new process state
+    deactivate AWS_ValidationLambda
+    activate AWS_SNS
+    AWS_SNS -> AWS_WriterLambda: Notifies change in process state
+    deactivate AWS_SNS
+    activate AWS_WriterLambda
+    AWS_WriterLambda -> DynamoDB: updates process register
+    activate DynamoDB 
+    DynamoDB -> AWS_WriterLambda: returns success
+    deactivate DynamoDB
+    deactivate AWS_WriterLambda
+
+
+    alt  [ if process is done]
+      activate AWS_ValidationLambda
+      AWS_ValidationLambda -> AWS_S3: Verifies bucket content
+      activate AWS_S3
+      AWS_S3 -> AWS_ValidationLambda: Returns bucket state
+      deactivate AWS_S3
+      AWS_ValidationLambda -> AWS_SNS: Notifies process is completed
+      deactivate AWS_S3
+      deactivate AWS_ValidationLambda
+      activate AWS_SNS
+      AWS_SNS -> User: Notifies user 
+      deactivate AWS_SNS
+      deactivate User
     end
 end
-
-
 @enduml
