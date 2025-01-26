@@ -1,0 +1,3 @@
+moviepy==2.1.2
+boto3==1.36.6
+pillow==9.2.0
