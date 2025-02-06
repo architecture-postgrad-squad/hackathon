@@ -1,0 +1,11 @@
+services:
+  api:
+    container_name: api
+    build: .
+    ports:
+      - '3000:3000'
+    expose:
+      - 3000
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
