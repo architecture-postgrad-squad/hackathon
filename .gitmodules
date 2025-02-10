@@ -1,0 +1,4 @@
+[submodule "hackathon-infrastructure"]
+	path = hackathon-infrastructure
+	url = https://github.com/architecture-postgrad-squad/hackathon-infrastructure.git
+	branch = dev
