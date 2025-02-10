@@ -2,3 +2,7 @@
 	path = hackathon-infrastructure
 	url = https://github.com/architecture-postgrad-squad/hackathon-infrastructure.git
 	branch = dev
+[submodule "hackathon-serverless-function"]
+	path = hackathon-serverless-function
+	url = https://github.com/architecture-postgrad-squad/hackathon-serverless-function.git
+	branch = development
