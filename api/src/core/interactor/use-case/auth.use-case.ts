@@ -8,7 +8,7 @@ import { UnauthorizedException } from '@/core/exceptions/custom-exceptions/unaut
 
 export class AuthenticateUserUseCase implements AuthenticateUserPort {
   private readonly logger = new Logger(AuthenticateUserUseCase.name);
-
+  
   constructor(private readonly lambdaClientPort: LambdaClientPort) {}
 
   async execute(email: string, password: string): Promise<GetAuthResponseDto> {
@@ -39,5 +39,6 @@ export class AuthenticateUserUseCase implements AuthenticateUserPort {
       ? JSON.parse(rawString)
       : rawString;
     return { token: parsedToken };
+
   }
 }
